@@ -66,12 +66,15 @@ COPY lib/ ./lib
 COPY priv/ ./priv/
 COPY mix.exs ./mix.exs
 COPY rel/ ./rel/
+COPY assets/ ./assets
 
 # Get dependencies
 RUN mix deps.get --only ${mix_env}
 RUN mix deps.compile
 
 RUN mix compile
+
+RUN mix tailwind.install
 
 # Build and digest assets
 RUN mix assets.deploy
