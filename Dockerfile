@@ -2,6 +2,8 @@
 # The docker image will be used to run the docker container.
 FROM erlang:27-alpine AS builder
 
+RUN apk add --no-cache build-base git nodejs npm
+
 # elixir expects utf8.
 ENV ELIXIR_VERSION="v1.18.1" \
     LANG=C.UTF-8 \
@@ -68,7 +70,17 @@ COPY mix.exs ./mix.exs
 COPY rel/ ./rel/
 
 # Get dependencies
-RUN --mount=type=ssh mix do deps.get --only ${mix_env}, deps.compile
+# RUN --mount=type=ssh mix do deps.get --only ${mix_env}, deps.compile
+
+RUN mix deps.get --only ${mix_env}
+RUN mix deps.compile
+
+
+# Build and digest assets
+RUN npm install --prefix assets
+RUN mix assets.deploy
+
+COPY assets/ ./assets
 
 RUN mix compile
 
@@ -114,7 +126,8 @@ ENV APP_NAME=${app_name} \
     APP_VSN=${app_vsn} \
     MIX_ENV=${mix_env}
 
-COPY --from=builder /opt/build/_build/${mix_env}/rel/${app_name}/ ./
+# COPY --from=builder /opt/build/_build/${mix_env}/rel/${app_name}/ ./
+COPY --from=builder /opt/build/_build/prod/rel/${app_name}/ ./
 
 COPY start.sh ./start.sh
 
