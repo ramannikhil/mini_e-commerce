@@ -71,10 +71,10 @@ COPY rel/ ./rel/
 RUN mix deps.get --only ${mix_env}
 RUN mix deps.compile
 
-# Build and digest assets
-# RUN mix assets.deploy
-
 RUN mix compile
+
+# Build and digest assets
+RUN mix assets.deploy
 
 # Build the release.
 RUN MIX_ENV=${mix_env} mix release

@@ -12,6 +12,17 @@ defmodule MiniECommerce.Migrator do
     end
   end
 
+  def seed_data do
+    seed_file = Path.join([:code.priv_dir(:mini_e_commerce), "repo", "seeds.exs"])
+
+    if File.exists?(seed_file) do
+      IO.puts("Running seed script...")
+      Code.eval_file(seed_file)
+    else
+      IO.puts("No seed file found.")
+    end
+  end
+
   def rollback(repo, version) do
     {:ok, _, _} = Ecto.Migrator.with_repo(repo, &Ecto.Migrator.run(&1, :down, to: version))
   end
