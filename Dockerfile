@@ -72,6 +72,14 @@ RUN --mount=type=ssh mix do deps.get --only ${mix_env}, deps.compile
 
 RUN mix compile
 
+# Install Node.js dependencies & build assets
+COPY assets/ ./assets/
+
+RUN npm install --prefix ./assets \
+ && npm run deploy --prefix ./assets \
+ && mix assets.deploy
+
+
 # Build the release.
 RUN MIX_ENV=${mix_env} mix release
 
