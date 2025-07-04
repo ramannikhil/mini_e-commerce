@@ -12,7 +12,7 @@ ENV ELIXIR_VERSION="v1.18.1" \
 
 RUN set -xe \
     && ELIXIR_DOWNLOAD_URL="https://repo.hex.pm/builds/elixir/${ELIXIR_VERSION}-otp-27.zip" \
-    && ELIXIR_DOWNLOAD_SHA256="65ff2bc9a604de1793c62971d624b473672b6dbafecaeb4474416a1fc27b4a82" \                           
+    && ELIXIR_DOWNLOAD_SHA256="65ff2bc9a604de1793c62971d624b473672b6dbafecaeb4474416a1fc27b4a82" \
     && buildDeps=' \
     ca-certificates \
     curl \
@@ -68,17 +68,19 @@ COPY lib/ ./lib
 COPY priv/ ./priv/
 COPY mix.exs ./mix.exs
 COPY rel/ ./rel/
-COPY assets/ ./assets
+
+# Copy assets and verify package.json exists before npm install
+COPY assets/package.json assets/package-lock.json* ./assets/
+RUN if [ -f assets/package.json ]; then npm install --prefix assets; else echo "No package.json found in assets directory"; fi
+
+# Copy remaining assets after npm install
+COPY assets/ ./assets/
 
 # Get dependencies
-# RUN --mount=type=ssh mix do deps.get --only ${mix_env}, deps.compile
-
 RUN mix deps.get --only ${mix_env}
 RUN mix deps.compile
 
-
 # Build and digest assets
-RUN npm install --prefix assets
 RUN mix assets.deploy
 
 RUN mix compile
@@ -93,7 +95,6 @@ RUN MIX_ENV=${mix_env} mix release
 #
 ########################################################################
 FROM erlang:26-alpine
-
 
 ENV LANG=en_US.UTF-8 \
     TERM=xterm \
@@ -113,7 +114,6 @@ RUN apk update && \
 
 WORKDIR /opt/app
 
-
 # The name of your application/release
 ARG app_name=mini_e_commerce
 # The version of the application we are building
@@ -125,11 +125,9 @@ ENV APP_NAME=${app_name} \
     APP_VSN=${app_vsn} \
     MIX_ENV=${mix_env}
 
-# COPY --from=builder /opt/build/_build/${mix_env}/rel/${app_name}/ ./
 COPY --from=builder /opt/build/_build/prod/rel/${app_name}/ ./
 
 COPY start.sh ./start.sh
-
 
 RUN ["chmod", "+x", "start.sh"]
 
