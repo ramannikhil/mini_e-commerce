@@ -72,7 +72,7 @@ RUN mix deps.get --only ${mix_env}
 RUN mix deps.compile
 
 # Build and digest assets
-RUN mix assets.deploy
+# RUN mix assets.deploy
 
 RUN mix compile
 
