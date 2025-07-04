@@ -25,6 +25,24 @@
       - iex -S mix phx.server 
     ```
 
+ ## Routes
+    - To get all the routes run
+      -  mix phx.routes
+    ```
+        GET     /                                      MiniECommerceWeb.PageController :home
+        GET     /login                                 MiniECommerceWeb.SessionController :new
+        POST    /session                               MiniECommerceWeb.SessionController :create
+        DELETE  /logout                                MiniECommerceWeb.SessionController :delete
+        GET     /live/list                             MiniECommerceWeb.Product.List nil
+        GET     /live/detail/:id                       MiniECommerceWeb.Product.Detail nil
+        GET     /live/admin/home                       MiniECommerceWeb.Admin.Home nil
+        GET     /live/admin/products/create            MiniECommerceWeb.Admin.Product.Create nil
+        GET     /live/admin/products/update            MiniECommerceWeb.Admin.Product.Update nil
+        GET     /live/admin/products/delete            MiniECommerceWeb.Admin.Product.Delete nil
+        GET     /live/admin/inventory/create           MiniECommerceWeb.Admin.Inventory.Create nil
+        GET     /live/admin/inventory/update           MiniECommerceWeb.Admin.Inventory.Update nil
+    ```   
+
 - Images references
   ### Products
   #### List Page
