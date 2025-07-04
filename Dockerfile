@@ -1,41 +1,124 @@
-# syntax=docker/dockerfile:1
+# create a dockerfile for that elixir project. The dockerfile will be used to build the docker image.
+# The docker image will be used to run the docker container.
+FROM erlang:27-alpine AS builder
 
-FROM hexpm/elixir:1.15.0-erlang-26.0.2-alpine-3.18.0 AS build
+# elixir expects utf8.
+ENV ELIXIR_VERSION="v1.18.1" \
+    LANG=C.UTF-8 \
+    TERM=xterm \
+    HOME=/root
 
-# install build dependencies
-RUN apk add --no-cache build-base npm git python3
+RUN set -xe \
+    && ELIXIR_DOWNLOAD_URL="https://repo.hex.pm/builds/elixir/${ELIXIR_VERSION}-otp-27.zip" \
+    && ELIXIR_DOWNLOAD_SHA256="65ff2bc9a604de1793c62971d624b473672b6dbafecaeb4474416a1fc27b4a82" \                           
+    && buildDeps=' \
+    ca-certificates \
+    curl \
+    ' \
+    && apk add --no-cache --virtual .build-deps $buildDeps \
+    && curl -fSL -o elixir-release.zip $ELIXIR_DOWNLOAD_URL \
+    && echo "$ELIXIR_DOWNLOAD_SHA256  elixir-release.zip" | sha256sum -c - \
+    && mkdir -p /elixir \
+    && unzip -d /elixir elixir-release.zip
 
-# prepare build dir
-WORKDIR /app
+ENV PATH=/elixir/bin:$PATH
 
-# install hex + rebar
-RUN mix local.hex --force && mix local.rebar --force
+RUN set -ex && \
+    apk --update add libstdc++ curl ca-certificates libc6-compat
 
-# set build ENV
-ENV MIX_ENV=prod
+RUN apk update && \
+    apk upgrade --no-cache && \
+    apk add --no-cache bash git openssh-client alpine-sdk curl python3 py3-pip cargo
 
-# install deps
-COPY mix.exs mix.lock ./
-COPY config config
-RUN mix deps.get --only $MIX_ENV
+# Setup SSH for private dependencies
+RUN mkdir -p ~/.ssh && \
+    chmod 700 ~/.ssh && \
+    ssh-keyscan -p 443 ssh.github.com >> ~/.ssh/known_hosts
 
-# build project
-COPY . .
-RUN mix deps.compile
-RUN mix assets.deploy
-RUN mix release
+# The name of your application/release (required)
+ARG app_name=mini_e_commerce
+# The version of the application we are building (required)
+ARG app_vsn=1.0.0
+# The environment to build with
+ARG mix_env=prod
 
-# prepare release image
-FROM alpine:3.18.0 AS app
+ENV MIX_ENV=${mix_env}
 
-RUN apk add --no-cache libstdc++ openssl ncurses-libs
+# First create the directories (everything under /app)
+RUN mkdir -p /opt/build \
+    && mkdir -p /opt/build/_build \
+    && mkdir -p /opt/build/deps
 
-WORKDIR /app
+# Switch to the work dir
+WORKDIR /opt/build
 
-COPY --from=build /app/_build/prod/rel/mini_e_commerce ./
+# Copy in the base mixfiles
+COPY mix.exs mix.lock /opt/build/
 
-ENV HOME=/app
-ENV MIX_ENV=prod
-ENV PORT=4000
+# Setup hex/rebar
+RUN mix do local.rebar --force, local.hex --force
 
-CMD ["bin/mini_e_commerce", "start"]
+# Copy in the directories
+COPY config /opt/build/config
+
+# Copy the app source code and files needed to build the release.
+COPY lib/ ./lib
+COPY priv/ ./priv/
+COPY mix.exs ./mix.exs
+COPY rel/ ./rel/
+
+# Get dependencies
+RUN --mount=type=ssh mix do deps.get --only ${mix_env}, deps.compile
+
+RUN mix compile
+
+# Build the release.
+RUN MIX_ENV=${mix_env} mix release
+
+
+########################################################################
+#
+# Start from a clean image
+#
+########################################################################
+FROM erlang:26-alpine
+
+
+ENV LANG=en_US.UTF-8 \
+    TERM=xterm \
+    SHELL=/bin/bash \
+    HOME=/root \
+    REPLACE_OS_VARS=true
+
+RUN set -ex && \
+    apk --update add libstdc++ curl ca-certificates libc6-compat
+
+RUN apk update && \
+    apk add --no-cache bash ncurses-libs openssl elixir build-base
+
+RUN apk update && \
+    apk upgrade --no-cache && \
+    apk add --no-cache bash git openssh-client alpine-sdk curl vim libpq pgcli
+
+WORKDIR /opt/app
+
+
+# The name of your application/release
+ARG app_name=mini_e_commerce
+# The version of the application we are building
+ARG app_vsn=1.0.0
+# The environment to build for.
+ARG mix_env=prod
+
+ENV APP_NAME=${app_name} \
+    APP_VSN=${app_vsn} \
+    MIX_ENV=${mix_env}
+
+COPY --from=builder /opt/build/_build/${mix_env}/rel/${app_name}/ ./
+
+COPY start.sh ./start.sh
+
+
+RUN ["chmod", "+x", "start.sh"]
+
+ENTRYPOINT ["/opt/app/start.sh"]
