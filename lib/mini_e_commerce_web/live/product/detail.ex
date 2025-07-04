@@ -125,12 +125,12 @@ defmodule MiniECommerceWeb.Product.Detail do
               current_quantity={@current_quantity || @product["quantity"]}
             />
             <%= if (@current_quantity || @product["quantity"]) <= 20 do %>
-              <span>
-              Hurry, stock is running out
-              </span>
-
-          <% end %>
-
+              <div class="mt-2">
+                <span class="text-xs text-red-500 italic">
+                  ⚠️ Hurry, stock is running out
+                </span>
+              </div>
+            <% end %>
           </div>
 
           <div class="pt-10 m-10">

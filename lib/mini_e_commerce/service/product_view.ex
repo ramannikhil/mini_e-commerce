@@ -22,7 +22,7 @@ defmodule MiniECommerce.Service.ProductView do
   @type product_id() :: String.t()
 
   @spec create(%{product_id() => binary()}) ::
-          {:ok, %ProductView{}} | {:error, Ecto.Changeset.t()}
+          {:ok, Ecto.Schema.t()} | {:error, Ecto.Changeset.t()}
   def create(%{"product_id" => _product_id} = params) do
     %ProductView{}
     |> ProductView.changeset(params)
@@ -38,7 +38,7 @@ defmodule MiniECommerce.Service.ProductView do
     end
   end
 
-  @spec update(product_id()) :: list(%ProductView{})
+  @spec update(product_id()) :: list(Ecto.Schema.t())
   def update(product_id) do
     from(v in ProductView, where: v.product_id == ^product_id)
     |> Repo.update_all(inc: [count: 1])

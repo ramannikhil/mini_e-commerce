@@ -23,7 +23,9 @@ defmodule MiniECommerce.Service.Inventory do
   @type current_quantity() :: String.t()
 
   @spec create(%{product_id() => binary(), current_quantity() => integer()}) ::
-          {:ok, %Product{}} | {:error, :invalid_params} | {:error, :unable_to_create_inventory}
+          {:ok, Ecto.Schema.t()}
+          | {:error, :invalid_params}
+          | {:error, :unable_to_create_inventory}
   def create(%{"product_id" => product_id, "current_quantity" => current_quantity} = params)
       when product_id not in ["", " ", nil] do
     %Inventory{}
@@ -62,7 +64,7 @@ defmodule MiniECommerce.Service.Inventory do
   """
 
   @spec update(%{product_id() => binary(), current_quantity() => integer()}) ::
-          {:ok, %Inventory{}}
+          {:ok, Ecto.Schema.t()}
           | {:error, :invalid_params}
           | {:error, Ecto.Changeset.t()}
           | {:error, :product_doesnot_exist}
@@ -118,7 +120,7 @@ defmodule MiniECommerce.Service.Inventory do
   fetch list of products for which Inventory doesn't exist
   """
 
-  @spec available_products() :: list(%Product{}) | []
+  @spec available_products() :: list(Ecto.Schema.t()) | []
   def available_products() do
     from(p in Product,
       left_join: i in Inventory,
@@ -133,7 +135,7 @@ defmodule MiniECommerce.Service.Inventory do
   fetch product for the related Inventory
   """
 
-  @spec get_product(binary()) :: %Inventory{} | nil
+  @spec get_product(binary()) :: Ecto.Schema.t() | nil
   def get_product(product_id) do
     from(x in Inventory,
       where: x.product_id == ^product_id,

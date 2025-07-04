@@ -1,6 +1,10 @@
 defmodule MiniECommerceWeb.Admin.BackToHomeButton do
   use MiniECommerceWeb, :html
 
+  @moduledoc """
+  component responsible for rendering the Back to Home button
+  """
+
   def onclick(assigns) do
     ~H"""
     <div class="pt-6 flex justify-center">

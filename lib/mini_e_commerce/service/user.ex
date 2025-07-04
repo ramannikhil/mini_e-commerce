@@ -33,7 +33,7 @@ defmodule MiniECommerce.Service.User do
   @type password() :: String.t()
 
   @spec authenticate_user(%{email() => String.t(), password() => String.t()}) ::
-          {:ok, %User{}} | {:error, :unauthorized | :not_found}
+          {:ok, Ecto.Schema.t()} | {:error, :unauthorized | :not_found}
 
   def authenticate_user(%{"email" => email, "password" => password} = _user_params) do
     user = validate_user(email)

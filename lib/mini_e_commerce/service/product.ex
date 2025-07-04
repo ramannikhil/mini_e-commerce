@@ -27,7 +27,7 @@ defmodule MiniECommerce.Service.Product do
   """
 
   @spec create(map()) ::
-          {:ok, %Product{}} | {:error, :invalid_params} | {:error, Ecto.Changeset.t()}
+          {:ok, Ecto.Schema.t()} | {:error, :invalid_params} | {:error, Ecto.Changeset.t()}
   def create(%{"name" => name, "price" => price} = product_params)
       when name not in ["", " ", nil] and not is_nil(price) and price not in ["", nil] do
     Product.changeset(%Product{}, product_params)
@@ -62,7 +62,7 @@ defmodule MiniECommerce.Service.Product do
   Product.update(%{"id" => "73ff528e-c43d-422f-9826-a1109bfb75e0"})
   """
   @spec update(map()) ::
-          {:ok, %Product{}}
+          {:ok, Ecto.Schema.t()}
           | {:error, :product_not_found}
           | {:error, :invalid_params}
           | {:error, Ecto.Changeset.t()}
@@ -101,7 +101,7 @@ defmodule MiniECommerce.Service.Product do
   # {:ok, %Product{}} | {:error, :invalid_params} | {:error, map()} |  {:error, :product_not_found}
   @type id() :: String.t()
   @spec delete(%{id() => binary()} | map()) ::
-          {:ok, %Product{}}
+          {:ok, Ecto.Schema.t()}
           | {:error, :product_not_found}
           | {:error, :invalid_params}
           | {:error, Ecto.Changeset.t()}
@@ -132,7 +132,7 @@ defmodule MiniECommerce.Service.Product do
   @doc """
     fetch list of products based on filters
   """
-  @type product() :: %Product{}
+  @type product() :: Ecto.Schema.t()
   @spec list(map()) ::
           %{products: list(), total_pages: integer()}
           | {:error, :invalid_params}
@@ -319,7 +319,7 @@ defmodule MiniECommerce.Service.Product do
   @doc """
   Get product by Id
   """
-  @spec get_product_with_inventory(binary()) :: %Product{} | nil
+  @spec get_product_with_inventory(binary()) :: map() | nil
   def get_product_by_id(product_id) do
     from(p in Product,
       where: p.id == ^product_id,
