@@ -68,6 +68,7 @@ COPY lib/ ./lib
 COPY priv/ ./priv/
 COPY mix.exs ./mix.exs
 COPY rel/ ./rel/
+COPY assets/ ./assets
 
 # Get dependencies
 # RUN --mount=type=ssh mix do deps.get --only ${mix_env}, deps.compile
@@ -79,8 +80,6 @@ RUN mix deps.compile
 # Build and digest assets
 RUN npm install --prefix assets
 RUN mix assets.deploy
-
-COPY assets/ ./assets
 
 RUN mix compile
 
