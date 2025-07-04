@@ -132,12 +132,19 @@ defmodule MiniECommerceWeb.Product.Detail do
               </div>
             <% end %>
           </div>
-
           <div class="pt-10 m-10">
             <button
               phx-value-name={@product["name"]}
               phx-click="handle_add_to_cart"
-              class="w-[200px] bg-black px-4 py-2 text-white rounded h-12"
+              class={
+                "w-[200px] px-4 py-2 rounded h-12 text-white " <>
+                if (@current_quantity || @product["quantity"]) == 0 do
+                "bg-gray-400 cursor-not-allowed"
+                else
+                "bg-black hover:bg-gray-800"
+                end
+                }
+              disabled={(@current_quantity || @product["quantity"]) == 0}
             >
               Add to Cart
             </button>

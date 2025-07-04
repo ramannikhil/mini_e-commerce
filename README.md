@@ -23,6 +23,10 @@
 
         Lastly run this to start the application local server (runs in IEX console)
       - iex -S mix phx.server 
+
+      - to run tests, use
+      - mix test
+
     ```
 
  ## Routes
